@@ -4,7 +4,7 @@
     <node name="gazebo"
           pkg="gazebo"
           type="gazebo"
-          args="$(find gazebo_worlds)/worlds/wg_collada.world"
+          args="$(find gazebo_worlds)/worlds/ofis.world"
           respawn="false"
           output="screen"/>
 
@@ -12,14 +12,15 @@
 
     <include file="$(find erratic_description)/launch/erratic_laser_mobile_base.launch" />
 
-  <param name="simple_box" textfile="$(find BLG456EAssignment3)/box.urdf" />
-  <node name="box1" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x 4.4 -y -0.7 -z 0  -R 0 -P 0 -Y 0 -model simple_box" respawn="false" output="screen" />
-  <node name="box2" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x 5.55 -y 9.65 -z 0  -R 0 -P 0 -Y 0 -model simple_box2" respawn="false" output="screen" />
-  <node name="box3" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x 5.55 -y 8.64 -z 0  -R 0 -P 0 -Y 0 -model simple_box3" respawn="false" output="screen" />
-  <node name="box4" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x -1 -y 1 -z 0  -R 0 -P 0 -Y 0 -model simple_box4" respawn="false" output="screen" />
-
-
-
+  <param name="simple_box" textfile="$(find BLG456EAssignment3)/models/box.urdf" />
+  <param name="simple_x_wall" textfile="$(find BLG456EAssignment3)/models/wall_x.urdf" />
+  <param name="simple_y_wall" textfile="$(find BLG456EAssignment3)/models/wall_y.urdf" />
+  
+  <node name="bot_wall" pkg="gazebo" type="spawn_model" args="-urdf -param simple_x_wall -x 0 -y -10.0 -z 0  -R 0 -P 0 -Y 0 -model wall1" respawn="false" output="screen" />
+  <node name="top_wall" pkg="gazebo" type="spawn_model" args="-urdf -param simple_x_wall -x 0 -y 10.0 -z 0  -R 0 -P 0 -Y 0 -model wall2" respawn="false" output="screen" />
+  <node name="left_wall" pkg="gazebo" type="spawn_model" args="-urdf -param simple_y_wall -x -10.0 -y 0 -z 0  -R 0 -P 0 -Y 0 -model wall3" respawn="false" output="screen" />
+  <node name="right_wall" pkg="gazebo" type="spawn_model" args="-urdf -param simple_y_wall -x 10.0 -y 0 -z 0  -R 0 -P 0 -Y 0 -model wall4" respawn="false" output="screen" />
+  
 
 
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
