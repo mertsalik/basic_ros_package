@@ -1,0 +1,63 @@
+<launch>
+    <param name="/use_sim_time" value="true" />
+
+    <node name="gazebo"
+          pkg="gazebo"
+          type="gazebo"
+          args="-u $(find gazebo_worlds)/worlds/wg_collada.world"
+          respawn="false"
+          output="screen"/>
+
+    <node name="gazebo_gui" pkg="gazebo" type="gui" respawn="false" output="screen"/>
+
+    <include file="$(find erratic_description)/launch/erratic_laser_mobile_base.launch" />
+
+  <param name="simple_box" textfile="$(find BLG456EAssignment3)/box.urdf" />
+  <node name="box1" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x 4.4 -y -0.7 -z 0  -R 0 -P 0 -Y 0 -model simple_box" respawn="false" output="screen" />
+<node name="box2" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x 5.55 -y 9.65 -z 0  -R 0 -P 0 -Y 0 -model simple_box2" respawn="false" output="screen" />
+<node name="box3" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x 5.55 -y 8.64 -z 0  -R 0 -P 0 -Y 0 -model simple_box3" respawn="false" output="screen" />
+<node name="box4" pkg="gazebo" type="spawn_model" args="-urdf -param simple_box -x -1 -y 1 -z 0  -R 0 -P 0 -Y 0 -model simple_box4" respawn="false" output="screen" />
+
+
+
+
+
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+        <remap from="scan" to="base_scan/scan" />
+        <param name="base_frame" value="base_footprint" />
+        <param name="odom_frame" value="odom"/>
+        <param name="map_update_interval" value="0.5"/>
+        <param name="maxUrange" value="3.9"/>
+        <param name="sigma" value="0.05"/>
+        <param name="kernelSize" value="1"/>
+        <param name="lstep" value="0.05"/>
+        <param name="astep" value="0.05"/>
+        <param name="iterations" value="5"/>
+        <param name="lsigma" value="0.075"/>
+        <param name="ogain" value="3.0"/>
+        <param name="lskip" value="0"/>
+        <param name="srr" value="0.01"/>
+        <param name="srt" value="0.02"/>
+        <param name="str" value="0.01"/>
+        <param name="stt" value="0.02"/>
+        <param name="linearUpdate" value="0.5"/>
+        <param name="angularUpdate" value="0.436"/>
+        <param name="temporalUpdate" value="3.0"/>
+        <param name="resampleThreshold" value="0.5"/>
+        <param name="particles" value="80"/>
+        <param name="xmin" value="-10.0" />
+        <param name="ymin" value="-10.0" />
+        <param name="xmax" value="10.0" />
+        <param name="ymax" value="10.0" />
+        <param name="delta" value="0.05"/>
+        <param name="llsamplerange" value="0.01"/>
+        <param name="llsamplestep" value="0.01"/>
+        <param name="lasamplerange" value="0.005"/>
+        <param name="lasamplestep" value="0.005"/>
+    </node>
+    
+    <node name="searchAndDiscover" pkg="BLG456EAssignment3" type="searchAndDiscover" output="screen" />
+
+    <include file="$(find erratic_navigation)/navigation_slam/move_base_slam.launch" />
+    
+</launch>

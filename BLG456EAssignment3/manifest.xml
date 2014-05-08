@@ -1,0 +1,23 @@
+<package>
+  <description brief="BLG456EAssignment3">
+
+     BLG456EAssignment3
+
+  </description>
+  <author>Mert Salık</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+
+<!--  <depend package="hokuyo_node"/> -->
+  <depend package="std_msgs"/>
+  <depend package="nav_msgs"/>
+  <depend package="laser_filters"/>
+  <depend package="roscpp"/>
+  <depend package="erratic_description"/>
+  <depend package="gazebo"/>
+  <depend package="gmapping"/>
+  <depend package="geometry_msgs" />
+
+</package>
+
+
