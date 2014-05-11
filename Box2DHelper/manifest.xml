@@ -1,0 +1,16 @@
+<package>
+  <description brief="Box2DHelper">
+
+     Box2DHelper
+
+  </description>
+  <author>viki</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/Box2DHelper</url>
+  <depend package="roscpp"/>
+  <depend package="std_msgs"/>
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lBox2DHelper -lBox2D"/> 
+  </export>
+</package>

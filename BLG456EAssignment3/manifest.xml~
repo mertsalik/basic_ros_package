@@ -17,6 +17,7 @@
   <depend package="gazebo"/>
   <depend package="gmapping"/>
   <depend package="geometry_msgs" />
+  <depend package="box2d_utility" />
 
 </package>
 
