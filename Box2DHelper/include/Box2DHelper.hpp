@@ -1,6 +1,7 @@
 #ifndef _BOX2DHELPER_
 #define _BOX2DHELPER_
 
+
 #include <Box2D/Box2D.h>
 
 #include <iostream>
@@ -8,10 +9,10 @@
 #include <string>
 #include <sstream>
 
-#define HOR_BLOCK_WIDTH 5.0
-#define HOR_BLOCK_HEIGHT 1.0
-#define VER_BLOCK_WIDTH 1.0
-#define VER_BLOCK_HEIGHT 5.0
+#define HOR_BLOCK_WIDTH 7.0
+#define HOR_BLOCK_HEIGHT 3.0
+#define VER_BLOCK_WIDTH 3.0
+#define VER_BLOCK_HEIGHT 7.0
 
 #define B1_X 4
 #define B1_Y 2
@@ -21,8 +22,6 @@
 #define B3_Y 0
 #define B4_X -7
 #define B4_Y 5
-
-
 
 std::string stringify(double x)
 {
@@ -35,6 +34,9 @@ std::string stringify(double x)
         return o.str();
     }
 }
+
+
+
 
 class Point{
 private:
@@ -71,19 +73,54 @@ private:
     Point* topLeft;
 public:
     Point* getCenter(){return center;};
-    Obstacle(Point* point, bool isHorizontal);
+    Obstacle(Point* point, bool isHorizontal){
+        center = new Point(point->getX(),point->getY());
+        int width,height;
+        if (isHorizontal){
+            width = HOR_BLOCK_WIDTH;
+            height = HOR_BLOCK_HEIGHT;
+        }else{
+            width = VER_BLOCK_WIDTH;
+            height = VER_BLOCK_HEIGHT;
+        }
+        
+        bottomLeft = new Point(
+                               (double)center->getX() - ((double)width/2),
+                               (double)center->getY() - ((double)height/2)
+                               );
+        bottomRight = new Point(
+                                (double)center->getX() + ((double)width/2),
+                                (double)center->getY() - ((double)height/2)
+                                );
+        topLeft = new Point(
+                            (double)center->getX() - ((double)width/2),
+                            (double)center->getY() + ((double)height/2)
+                            );
+        topRight = new Point(
+                             (double)center->getX() + ((double)width/2),
+                             (double)center->getY() + ((double)height/2)
+                             );
+    };
     
     Point* getBL(){ return bottomLeft;};
     Point* getBR(){ return bottomRight;};
     Point* getTR(){ return topRight;};
     Point* getTL(){ return topLeft;};
     
-    std::string toString();
+    std::string toString(){
+        std::string result;
+        result += "Block Points, ";
+        result += " BL: " + bottomLeft->toString();
+        result += " BR: " + bottomRight->toString();
+        result += " TR: " + topRight->toString();
+        result += " TL: " + topLeft->toString();
+        return result;
+    }
 };
 
 class RosWorld{
 private:
-    std::vector<Obstacle>* objects;
+    std::vector<Obstacle*> objects;
     
     // BOX2D
     b2World *m_world;
@@ -92,14 +129,24 @@ private:
     b2Vec2 upper;
     b2BodyDef myBodyDef;
     b2FixtureDef myFixtureDef;
-    
+
     bool checkRayCast(b2Vec2 p1, b2Vec2 p2, b2Vec2 &output);
     
     b2Body* createObject(Point* bl,Point* br, Point* tl, Point* tr, Point* center);
     
+    bool onAnyObject(b2Vec2 &p);
+
 public:
     RosWorld();
+    
+    bool pointAvailable(Point* p);
+    
     bool checkRayCast(Point* p1, Point* p2, Point &output);
+    
+    Point* getNonCollidingPoint(Point* p1, Point* p2);
+    
+    void printShapes();    
 };
+
 
 #endif

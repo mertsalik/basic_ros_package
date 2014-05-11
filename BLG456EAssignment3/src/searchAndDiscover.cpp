@@ -29,7 +29,7 @@
 #define PI 3.141592653589793
 
 #define RRTe	// RRT \ PRM
-#define RRT_VERTICE_COUNT 200
+#define RRT_VERTICE_COUNT 400
 #define DELTA_Q 100
 
 using namespace std;
@@ -41,7 +41,8 @@ boost::shared_ptr<tf::TransformListener> tf_listener_; //smart pointer would be 
 tf::TransformListener* tf_listener = NULL;	// transform listener
 
 double waypoint_x = 0, waypoint_y = 0;
-double goal_x = 2.75, goal_y = 3.8;
+//double goal_x = 2.75, goal_y = 3.8;
+double goal_x = 8.5, goal_y = 8.5;
 Node* goalNode = NULL;
 list<Node*> path;
 
@@ -78,14 +79,33 @@ Node* nearestVertex(list<Node*>& g, Node*& n){
     
 }
 
-bool isColliding(Node* n1, Node* n2){
-    return false;
+bool isColliding(Node* n1, Node* n2, Node* other){
+    cout << "Raycasting ";
+    if(ros_world!=NULL){
+      std::cout << "Ray casting ..." << std::endl;
+      Point* p1 = new Point(n1->x(),n1->y());
+      Point* p2 = new Point(n2->x(),n2->y());
+      cout << p1->toString() << " | " << p2->toString() << endl;
+      Point intersection_point(0,0);
+      bool result = ros_world->checkRayCast(p1,p2,intersection_point);
+      cout << "RAYCAST RESULT : " << result << endl;
+      // TODO: add intersection_point to node list
+      return result;
+    }else{
+      ROS_ERROR("RosWorld is not initlialized!");
+      return false;
+    }
 }
 
 Node* new_conf(Node* n, Node* r){
-    if(isColliding(n, r)){
-        Node* collisionFree;
-        
+    Node* collisionFree;
+    if(isColliding(n, r, collisionFree)){
+	Point* p1 = new Point(n->x(),n->y());
+	Point* p2 = new Point(r->x(),r->y());
+	Point* p3 = ros_world->getNonCollidingPoint(p1,p2);
+	collisionFree = new Node(p3->getX(),p3->getY(),9999);
+	cout << "New collision free point "<< endl;
+	cout << "From: " << p1->toString() << "  to: " << p3->toString() << endl; 
         return collisionFree;
     }
     else
@@ -93,6 +113,7 @@ Node* new_conf(Node* n, Node* r){
 }
 
 void build_RRT_graph(double init_x, double init_y){
+    cout << "build RRT graph" << endl;
     srand((unsigned)time(NULL));
     
     // This algorithm is derived from the pseudocode at the following link
@@ -109,6 +130,13 @@ void build_RRT_graph(double init_x, double init_y){
         double x = ((double)(rand()%2000 - 1000))/100;
         double y = ((double)(rand()%2000 - 1000))/100;
         Node* randNode = new Node(x, y, i);
+	Point* randPoint = new Point(randNode->x(),randNode->y());
+	while(!ros_world->pointAvailable(randPoint)){
+	  double x = ((double)(rand()%2000 - 1000))/100;
+	  double y = ((double)(rand()%2000 - 1000))/100;
+	  randNode = new Node(x, y, i);
+	  randPoint = new Point(randNode->x(),randNode->y());
+	}
         //cout << " Rand Node " << i << " (" << x << "," << y << ")" <<endl;
         
         // find the nearest node in the graph to the random node
@@ -300,7 +328,7 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
             srand((unsigned)time(NULL));
     
             build_RRT_graph(0.05, 0.001);
-            print();
+            //print();
             isGraphBuilt = true;
             initPath();
             printPath();
@@ -356,7 +384,7 @@ int main(int argc, char **argv){
     initBox2D();
     ros::Subscriber map_reader =n.subscribe("map",3,mapCallback);
     movement_publisher = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1000);
-
+    
     // sort transform listener
     tf_listener = new tf::TransformListener();	
     tf_listener_ = boost::shared_ptr<tf::TransformListener>(new tf::TransformListener());
