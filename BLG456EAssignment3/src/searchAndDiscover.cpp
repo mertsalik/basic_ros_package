@@ -323,7 +323,7 @@ void exportGraph(){
 			file << (*it)->adjs().size() << endl;
 			for(list<Node*>::const_iterator ite = (*it)->adjs().begin() ;
 											ite != (*it)->adjs().end() ; ++ite){
-				file << (*ite)->id() << " " << (*ite)->x() << " " << (*ite)->y() << endl;
+				file << (*ite)->x() << " " << (*ite)->y() << endl;
 			}
 			file << endl;
 		}
