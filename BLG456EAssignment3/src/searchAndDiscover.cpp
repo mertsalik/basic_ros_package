@@ -12,6 +12,7 @@
 #include <list>
 #include <vector>
 #include <queue>
+#include <map>
 
 #include <cmath>
 #include <ctime>
@@ -33,8 +34,10 @@
 
 #define PI 3.141592653589793
 
-#define RRT	// RRT \ PRM
-#define RRT_VERTICE_COUNT 400
+#define PRM	// RRT \ PRM
+#define VERTICE_COUNT 400
+#define PRM_NEIGHBOR_COUNT 10
+#define MAX_VALUE 100000
 
 using namespace std;
 
@@ -58,6 +61,10 @@ RosWorld *ros_world;
 list<Node*> RRT_graph;
 bool isGraphBuilt = false;
 
+// PRM variables
+list<Node*> PRM_graph;
+
+// directory variables
 struct passwd *pw = getpwuid(getuid());
 const char *homedir = pw->pw_dir;
 
@@ -103,10 +110,10 @@ Node* new_conf(Node* n, Node* r){
 	// if there is no collision, return the random node
 	// else, find the collision free point in the direction of vector(r - n)
     if(isColliding(n, r)){
-		Point* p1 = new Point(n->x(),n->y());
-		Point* p2 = new Point(r->x(),r->y());
+        Point* p1 = new Point(n->x(),n->y());
+        Point* p2 = new Point(r->x(),r->y());
 
-		Point* p3 = ros_world->getNonCollidingPoint(p1,p2); 
+        Point* p3 = ros_world->getNonCollidingPoint(p1,p2); 
         return new Node(p3->getX(),p3->getY(),r->id());
     }
     else
@@ -121,7 +128,7 @@ void build_RRT_graph(double init_x, double init_y){
 	RRT_graph.push_back(new Node(init_x, init_y, 0));
 
 	// Randomly sample RRT_VERTICE_COUNT vertices
-	for (unsigned i=1; i<=RRT_VERTICE_COUNT ; ++i){
+	for (unsigned i=1; i<=VERTICE_COUNT ; ++i){
 		
 		// get a random x, y
 		double x = ((double)(rand()%2000 - 1000))/100;
@@ -206,7 +213,7 @@ void initPath(){
     
 }
 
-void traverseRRT(){
+void traversePath(){
     
     // robot variables
     double robot_x,robot_y,robot_orientation;
@@ -294,6 +301,176 @@ void traverseRRT(){
         
 }
 
+void getClosestNeighbors(list<Node*>& g, Node*& n, list<Node*>& neighbors)
+{
+    map<double, Node*> m;
+    for(list<Node*>::iterator it = g.begin() ; it != g.end() ; ++it){
+        m.insert(pair<double, Node*>(distance(n->x(), (*it)->x(), n->y(), (*it)->y()), *it));
+    }
+    
+    m.erase(m.begin());
+    
+    if(m.size()>=PRM_NEIGHBOR_COUNT)
+    {
+        for(int i=0; i<PRM_NEIGHBOR_COUNT; i++)
+        {
+            neighbors.push_back((*m.begin()).second );
+            m.erase(m.begin());
+        }
+    }
+}
+
+void build_PRM_graph(double init_x, double init_y){
+
+    // initialize the graph with the initial coordinates of the robot
+    PRM_graph.push_back(new Node(init_x, init_y, 0));
+    PRM_graph.front()->setValue(0);
+    
+    // creating random points on the configuration space
+    unsigned i = 1;
+    do{
+        // get a random x, y
+        double x = ((double)(rand()%2000 - 1000))/100;
+        double y = ((double)(rand()%2000 - 1000))/100;
+        Node* randNode = new Node(x, y, i);
+
+        // make sure the randomly acquired node is collision free
+        Point* randPoint = new Point(randNode->x(),randNode->y());
+        while(!ros_world->pointAvailable(randPoint)){
+            double x = ((double)(rand()%2000 - 1000))/100;
+            double y = ((double)(rand()%2000 - 1000))/100;
+            randNode = new Node(x, y, i);
+            randPoint = new Point(randNode->x(),randNode->y());
+        }
+       
+        // add rand node to the graph
+        PRM_graph.push_back(randNode);
+        
+        // id increase
+        i++;
+        
+    }while(PRM_graph.size()<=VERTICE_COUNT);
+    
+
+    // setting goal values as node
+    PRM_graph.push_back(new Node(goal_x, goal_y, i));
+
+    for(list<Node*>::iterator q = PRM_graph.begin() ; q != PRM_graph.end() ; ++q)
+    {
+        // find each node's closest neighbors
+        list<Node*> neighbors; 
+        getClosestNeighbors(PRM_graph, *q, neighbors);
+        
+        for(list<Node*>::iterator it = neighbors.begin() ; it != neighbors.end() ; ++it)
+        {
+            
+            // check the edge between the node and its each neighbor and path between them
+            if(!((*q)->includesAdj(*it)) && !isColliding(*q, *it))
+            {
+                // create graph undirectedly
+                (*q)->addAdj(*it);
+                (*it)->addAdj(*q);
+           
+            }
+        }
+       
+    }
+   	
+}
+
+void Dijkstra(){
+    //	cout << "Dijkstra" << endl;
+    // entire graph is copied to Q
+    list<Node*> Q;
+    for(list<Node*>::iterator it = PRM_graph.begin() ; it != PRM_graph.end() ; ++it)
+    {
+            Q.push_back(*it);
+    }
+    Node* u;
+    //cout << u->x() << " " << u->y() << endl;
+    while(Q.size()>0)
+    {             
+        u = Q.front();
+        for(list<Node*>::iterator it = Q.begin() ; it != Q.end() ; ++it)
+        {
+            // u has the minimum value all the time
+            if(u->value() > (*it)->value())
+            {
+                u = *it;
+            }
+        }
+        
+        Q.remove(u);
+
+        if(u->value() == MAX_VALUE)
+        {
+            break;
+        }
+		
+        // scanning u's neighbors to set parent and new value
+        for(list<Node*>::const_iterator v = (u->adjs()).begin() ; v != (u->adjs()).end() ; ++v)
+        {
+                                  
+            double alt = u->value() + distance(u->x(), (*v)->x(), u->y(), (*v)->y());
+            if(alt < (*v)->value())
+            {
+                (*v)->setValue(alt);
+                (*v)->setParent(u);
+                //decrease key v in Q?
+            }
+
+        }
+    }
+
+}
+
+void init_PRM_path()
+{
+    cout << "init PRM path" << endl;
+    Node* temp;
+    // if goal node does not have parent 
+    if(PRM_graph.back()->parent() == NULL)
+    {	
+        ROS_WARN("init PRM");
+        ROS_WARN("init PRM");
+        // searching entire graph to find the closest node to goal which have connection to start node
+        for(list<Node*>::iterator q = PRM_graph.begin() ; q != PRM_graph.end() ; ++q)
+        {
+  
+            double dist = MAX_VALUE;
+            if((*q)->parent() != NULL)
+            {
+ 
+                if(distance((*q)->x(),PRM_graph.back()->x(),(*q)->y(),PRM_graph.back()->y()) < dist)
+                {
+
+                   dist = distance((*q)->x(),PRM_graph.back()->x(),(*q)->y(),PRM_graph.back()->y());
+                   temp = *q;
+                }
+            }                      
+        }
+
+      // temp is the temporary goal node
+      PRM_graph.push_back(temp);
+      
+
+                                  
+    }
+    
+    // at the back of the graph there is the goal node
+    for(Node* n = PRM_graph.back() ; n != PRM_graph.front() ; n = n->parent()){
+        path.push_front(n);
+    }
+    
+    cout << "Path: " << endl;
+    list<Node*>::iterator p;
+    for(list<Node*>::iterator q = path.begin() ; q != path.end() ; ++q)
+    {                     
+        cout << "ID: " << (*q)->id() << endl;
+        cout << "\tValue:" << (*q)->value() << endl;
+    }
+
+}
 
 void print(){
     cout << "\nRRT GRAPH with size: " << RRT_graph.size() << endl;
@@ -310,45 +487,45 @@ void print(){
     cout << endl << endl;
 }
 
-void exportGraph(){
-	ofstream file;
-	string dir = homedir;
-	dir += "/graph.txt";
-	file.open(dir.c_str());
-	if(file.is_open()){
-		cout << "\nGRAPH OUTPUT FILE CREATED!" << endl << endl;
-		file << RRT_graph.size() << endl;
-		for(list<Node*>::const_iterator it = RRT_graph.begin(); it != RRT_graph.end() ; ++it){
-			file << (*it)->x() << " " << (*it)->y() << endl;
-			file << (*it)->adjs().size() << endl;
-			for(list<Node*>::const_iterator ite = (*it)->adjs().begin() ;
-											ite != (*it)->adjs().end() ; ++ite){
-				file << (*ite)->x() << " " << (*ite)->y() << endl;
-			}
-			file << endl;
-		}
-	
+void exportGraph(const list<Node*>& graph){
+    ofstream file;
+    string dir = homedir;
+    dir += "/graph.txt";
+    file.open(dir.c_str());
+    if(file.is_open()){
+        cout << "\nGRAPH OUTPUT FILE CREATED!" << endl << endl;
+        file << graph.size() << endl;
+        for(list<Node*>::const_iterator it = graph.begin(); it != graph.end() ; ++it){
+            file << (*it)->x() << " " << (*it)->y() << endl;
+            file << (*it)->adjs().size() << endl;
+            for(list<Node*>::const_iterator ite = (*it)->adjs().begin() ;
+                                        ite != (*it)->adjs().end() ; ++ite){
+                file << (*ite)->x() << " " << (*ite)->y() << endl;
+            }
+            file << endl;
+        }
 
-		file.close();
-	}
-	else{
-		cout << "\nERROR OPENING OUTPUT FILE" << endl << endl;
-	}
-	
-	dir.clear();
-	dir = homedir;
-	dir += "/path.txt";
-	file.open(dir.c_str());
-	if(file.is_open()){
-		cout << "\nPATH OUTPUT FILE CREATED!" << endl << endl;
-		file << path.size() << endl;		
-		for(list<Node*>::const_iterator it = path.begin(); it != path.end() ; ++it)
-			file << (*it)->x() << " " << (*it)->y() << endl;
-		
-		file.close();
-	}
 
-	return;
+        file.close();
+    }
+    else{
+            cout << "\nERROR OPENING OUTPUT FILE" << endl << endl;
+    }
+	
+    dir.clear();
+    dir = homedir;
+    dir += "/path.txt";
+    file.open(dir.c_str());
+    if(file.is_open()){
+        cout << "\nPATH OUTPUT FILE CREATED!" << endl << endl;
+        file << path.size() << endl;		
+        for(list<Node*>::const_iterator it = path.begin(); it != path.end() ; ++it)
+            file << (*it)->x() << " " << (*it)->y() << endl;
+
+        file.close();
+    }
+
+    return;
 }
 
 void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
@@ -356,7 +533,7 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
     // print robot transform
     tf::StampedTransform transform;
     try{
-
+#ifdef RRT
         if(!isGraphBuilt){
 
             isGraphBuilt = true;
@@ -367,12 +544,30 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
     
             build_RRT_graph(0.05, 0.001);
             initPath();
-			exportGraph();
+            exportGraph(RRT_graph);
             printPath();
-            traverseRRT();	
+            traversePath();	
         
         }
-        
+#elif defined(PRM)
+        cout << "\n\n\nPRM CALLED\n\n"<< endl;
+        if(!isGraphBuilt){
+
+            isGraphBuilt = true;
+            // originally, we were goint to push the robot x,y coordinates
+            // as parameters, however the first callback somehow produces
+            // incorrect x,y values, therefore we 'assume' the correct
+            // coordinates as x:0,05 and y:0,001
+
+            build_PRM_graph(0.05, 0.001);
+            Dijkstra();
+            init_PRM_path();
+            exportGraph(PRM_graph);
+            printPath();
+            traversePath();	
+
+        }   
+#endif 
         // read and print current position and current goal position
         (*tf_listener).lookupTransform("/map", "/base_link", ros::Time(0), transform);
         double x,y;
