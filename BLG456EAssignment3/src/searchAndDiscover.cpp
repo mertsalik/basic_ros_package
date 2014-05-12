@@ -39,6 +39,8 @@
 #define PRM_NEIGHBOR_COUNT 10
 #define MAX_VALUE 100000
 
+#define MAP_TYPE 1
+
 using namespace std;
 
 //////////////////	GLOBAL VARIABLES
@@ -480,7 +482,7 @@ void exportGraph(const list<Node*> graph){
         (*it)->resetVisited();
     
 
-    file.open(dir.c_str());
+    
     if(file.is_open()){
         cout << "\nGRAPH OUTPUT FILE CREATED!" << endl << endl;
         file << graph.size() << endl;
@@ -608,7 +610,7 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 }
 
 void initBox2D(){
-  ros_world = new RosWorld();
+  ros_world = new RosWorld(MAP_TYPE);
 }
 
 int main(int argc, char **argv){
