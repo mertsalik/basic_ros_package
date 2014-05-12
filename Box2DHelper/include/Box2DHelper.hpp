@@ -14,14 +14,6 @@
 #define VER_BLOCK_WIDTH 2.0
 #define VER_BLOCK_HEIGHT 6.0
 
-#define B1_X 4
-#define B1_Y 2
-#define B2_X 0
-#define B2_Y -5
-#define B3_X -3
-#define B3_Y 0
-#define B4_X -7
-#define B4_Y 5
 
 std::string stringify(double x)
 {
@@ -121,7 +113,7 @@ public:
 class RosWorld{
 private:
     std::vector<Obstacle*> objects;
-    
+    int map_type;
     // BOX2D
     b2World *m_world;
     b2Vec2 gravity;
@@ -138,7 +130,7 @@ private:
     bool onAnyObject(b2Vec2 &p);
 
 public:
-    RosWorld();
+    RosWorld(int map_type);
     
     bool pointAvailable(Point* p);
     

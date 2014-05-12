@@ -19,12 +19,40 @@ void RosWorld::printShapes(){
         }
     }; 
 
-RosWorld::RosWorld(){
+RosWorld::RosWorld(int map_type){
+	this->map_type = map_type;
         gravity.Set(0,0);
         m_world = new b2World(gravity);
         upper.Set(-10,-10);
         lower.Set(10,10);
-        
+	
+	std::vector<Point*> obstacles;
+	std::vector<bool> directions;
+	switch(this->map_type){
+	    case 3:
+		break;
+	    case 2:
+		break;
+	    case 1:
+	    default:
+		obstacles.push_back(new Point(4,2));
+		directions.push_back(true);
+		obstacles.push_back(new Point(0,-5));
+		directions.push_back(true);
+		obstacles.push_back(new Point(-3,0));
+		directions.push_back(false);
+		obstacles.push_back(new Point(-7,5));
+		directions.push_back(false);
+		break;
+	}
+	
+	for(int i=0; i<obstacles.size(); i++){
+	    Point* temp = obstacles[i];
+	    Obstacle* block = new Obstacle(temp, directions[i]);
+	    objects.push_back(block);
+	}
+	
+        /*
         Obstacle* block1 = new Obstacle(new Point(B1_X,B1_Y), true);
         Obstacle* block2 = new Obstacle(new Point(B2_X,B2_Y), true);
         Obstacle* block3 = new Obstacle(new Point(B3_X,B3_Y), false);
@@ -34,11 +62,18 @@ RosWorld::RosWorld(){
         objects.push_back(block2);
         objects.push_back(block3);
         objects.push_back(block4);
-        
+        */
+	
+	for(int i=0; i<objects.size(); i++){
+	    Obstacle* block = objects[i];
+	    b2Body* _b1 = createObject(block->getBL(),block->getBR(),block->getTL(),block->getTR(),block->getCenter());
+	}
+	/*
         b2Body* _b1 = createObject(block1->getBL(),block1->getBR(),block1->getTL(),block1->getTR(),block1->getCenter());
         b2Body* _b2 = createObject(block2->getBL(),block2->getBR(),block2->getTL(),block2->getTR(),block2->getCenter());
         b2Body* _b3 = createObject(block3->getBL(),block3->getBR(),block3->getTL(),block3->getTR(),block3->getCenter());
         b2Body* _b4 = createObject(block4->getBL(),block4->getBR(),block4->getTL(),block4->getTR(),block4->getCenter());
+	*/
     };
     
 bool RosWorld::pointAvailable(Point* p){
