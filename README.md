@@ -26,6 +26,18 @@ CUSTOM MAP
 
 Merge opt/ folder to yours.
 
+build
+==================
+
+In Box2DHelper folder run:
+
+make clean && make
+
+In BLG456EAssignment3 folder run :
+
+make clean && make
+
+
 run 
 ==================
 
