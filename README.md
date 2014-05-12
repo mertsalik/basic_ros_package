@@ -15,8 +15,12 @@ download latest release from https://code.google.com/p/box2d/downloads/list
 in Build folder run :
 
 cmake ..
+
 sudo make
+
 sudo make install
+
+
 
 CUSTOM MAP
 
