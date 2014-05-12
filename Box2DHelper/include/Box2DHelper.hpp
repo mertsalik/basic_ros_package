@@ -9,10 +9,10 @@
 #include <string>
 #include <sstream>
 
-#define HOR_BLOCK_WIDTH 7.0
-#define HOR_BLOCK_HEIGHT 3.0
-#define VER_BLOCK_WIDTH 3.0
-#define VER_BLOCK_HEIGHT 7.0
+#define HOR_BLOCK_WIDTH 6.0
+#define HOR_BLOCK_HEIGHT 2.0
+#define VER_BLOCK_WIDTH 2.0
+#define VER_BLOCK_HEIGHT 6.0
 
 #define B1_X 4
 #define B1_Y 2

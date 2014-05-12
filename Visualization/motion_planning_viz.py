@@ -6,6 +6,8 @@ hor_block_height = 1*20
 ver_block_widht = 1*20
 ver_block_height = 5*20
 
+map1_obstacles = [(1,4,2),(1,0,-5),(0,-3,0),(0,-7,5)]
+
 def readGraph(t,file_name):
 	f = open(file_name, 'r')
 	node_count = 0
@@ -35,23 +37,23 @@ def readGraph(t,file_name):
     
 
 def readPath(t, file_name):
-    f = open(file_name, 'r')
-    node_count = f.readline()
-    node_count = int(node_count)
-    points = []
-    for i in range(node_count):
-        temp = f.readline()
-        points.append(temp)
-    for i in range(len(points)-1):
-        point = points[i]
-        point = point.split(" ")
-        p1_x = float(point[0])
-        p1_y = float(point[1])
-        point2 = points[i+1]
-        point2 = point2.split(" ")
-        p2_x = float(point2[0])
-        p2_y = float(point2[1])
-        drawLine(t, p1_x, p1_y, p2_x, p2_y, 'red', 2)
+	f = open(file_name, 'r')
+	node_count = f.readline()
+	node_count = int(node_count)
+	points = []
+	for i in range(node_count):
+		temp = f.readline()
+		points.append(temp)
+	for i in range(len(points)-1):
+		point = points[i]
+		point = point.split(" ")
+		p1_x = float(point[0])
+		p1_y = float(point[1])
+		point2 = points[i+1]
+		point2 = point2.split(" ")
+		p2_x = float(point2[0])
+		p2_y = float(point2[1])
+		drawLine(t, p1_x, p1_y, p2_x, p2_y, 'red', 2)
 
 def border(t, screen_x, screen_y):
     """(Turtle, int, int)
@@ -145,62 +147,55 @@ def drawLine(t, p1_x, p1_y, p2_x, p2_y, color, size):
 	t.goto(p2_x,p2_y)
 	t.penup()
 	
-
-def square(t, size, color):
-    """(Turtle, int, str)
-
-    Draw a square of the chosen colour and size.
-    """
-    t.pencolor(color)
-    t.pendown()
-    for i in range(4):
-        t.forward(size)
-        t.right(90)
-
 def main():
-    graph_file_name = ""
-    path_file_name = ""
-    if len(sys.argv) < 3:
-	    print("Need input file")
+	obstacle_map = []
+	graph_file_name = ""
+	path_file_name = ""
+	map_id = 1
+	if len(sys.argv) < 4:
+	    print("prm1 : graph.txt \n prm2 : path.txt \n prm3 : map_id  (1,2,3)")
 	    exit()    
-    else:
-    	graph_file_name = sys.argv[1]
-    	path_file_name = sys.argv[2]
+	else:
+		graph_file_name = sys.argv[1]
+		path_file_name = sys.argv[2]
+		map_id = int(sys.argv[3])
+	#Select Map
+	if map_id == 1:
+		obstacle_map = map1_obstacles
 
-    
-    
-    # Create screen and turtle.
-    turtle.setup(600,600)
-    screen = turtle.Screen()
-    screen.title('Visualization for Motion Planning')
-    #screen_x, screen_y = screen.screensize()
-    screen_x = 400
-    screen_y = 400
-    t = turtle.Turtle()
+	# Create screen and turtle.
+	turtle.setup(600,600)
+	screen = turtle.Screen()
+	screen.title('Visualization for Motion Planning')
+	#screen_x, screen_y = screen.screensize()
+	screen_x = 400
+	screen_y = 400
+	t = turtle.Turtle()
 
-    # Uncomment to draw the graphics as quickly as possible.
-    t.speed(0)
+	# Uncomment to draw the graphics as quickly as possible.
+	t.speed(0)
 
-    
+	# Draw a border around the canvas
+	border(t, screen_x, screen_y)
 
-    # Draw a border around the canvas
-    border(t, screen_x, screen_y)
-    hor_obstacle(t, 4*20, 2*20, screen_x, screen_y)
-    hor_obstacle(t, 0*20, -5*20, screen_x, screen_y)
-    ver_obstacle(t, -3*20, 0*20, screen_x, screen_y)
-    ver_obstacle(t, -7*20, 5*20, screen_x, screen_y)
-    readGraph(t, graph_file_name)
-    readPath(t, path_file_name)
+	for obstacle in obstacle_map:
+		is_hor = obstacle[0]
+		if is_hor == 1:
+			hor_obstacle(t, obstacle[1]*20, obstacle[2]*20, screen_x, screen_y)
+		else:
+			ver_obstacle(t, obstacle[1]*20, obstacle[2]*20, screen_x, screen_y)
+	readGraph(t, graph_file_name)
+	readPath(t, path_file_name)
 
-    # Draw a set of nested squares, varying the color.
-    # The squares are 10%, 20%, etc. of half the size of the canvas.
-    #colors = ['red', 'orange', 'yellow', 'green', 'blue', 'violet']
-    #t.pensize(3)
-    #for i, color in enumerate(colors):
-    #    square(t, (screen_y / 2) / 10 * (i+1), color)
+	# Draw a set of nested squares, varying the color.
+	# The squares are 10%, 20%, etc. of half the size of the canvas.
+	#colors = ['red', 'orange', 'yellow', 'green', 'blue', 'violet']
+	#t.pensize(3)
+	#for i, color in enumerate(colors):
+	#    square(t, (screen_y / 2) / 10 * (i+1), color)
 
-    print('Hit any key to exit')
-    dummy = input()
+	print('Hit any key to exit')
+	dummy = input()
         
 if __name__ == '__main__':
-    main()
+	main()
