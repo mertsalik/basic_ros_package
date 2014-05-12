@@ -35,7 +35,7 @@
 #define PI 3.141592653589793
 
 #define PRM	// RRT \ PRM
-#define VERTICE_COUNT 4000
+#define VERTICE_COUNT 600
 #define PRM_NEIGHBOR_COUNT 10
 #define MAX_VALUE 100000
 
@@ -468,22 +468,38 @@ void print(){
     cout << endl << endl;
 }
 
-void exportGraph(const list<Node*>& graph){
-    // REDUNDANCY ELIMINATION REQUIRED
+void exportGraph(const list<Node*> graph){
     
     ofstream file;
     string dir = homedir;
     dir += "/graph.txt";
     file.open(dir.c_str());
+    
+    // set all nodes to unvisited
+    for(list<Node*>::const_iterator it = graph.begin() ; it != graph.end() ; ++it)
+        (*it)->resetVisited();
+    
+
+    file.open(dir.c_str());
     if(file.is_open()){
         cout << "\nGRAPH OUTPUT FILE CREATED!" << endl << endl;
         file << graph.size() << endl;
         for(list<Node*>::const_iterator it = graph.begin(); it != graph.end() ; ++it){
+            (*it)->setVisited();
             file << (*it)->x() << " " << (*it)->y() << endl;
-            file << (*it)->adjs().size() << endl;
+            
+            // avoid redundancy by not printing already visited 
+            unsigned count = 0;
             for(list<Node*>::const_iterator ite = (*it)->adjs().begin() ;
                                         ite != (*it)->adjs().end() ; ++ite){
-                file << (*ite)->x() << " " << (*ite)->y() << endl;
+                if((*ite)->visited() == false) count++;
+            }
+            
+            file << count << endl;
+            for(list<Node*>::const_iterator ite = (*it)->adjs().begin() ;
+                                        ite != (*it)->adjs().end() ; ++ite){
+                if((*ite)->visited() == false)
+                    file << (*ite)->x() << " " << (*ite)->y() << endl;
             }
             file << endl;
         }
@@ -494,6 +510,7 @@ void exportGraph(const list<Node*>& graph){
     else{
             cout << "\nERROR OPENING OUTPUT FILE" << endl << endl;
     }
+    
 	
     dir.clear();
     dir = homedir;

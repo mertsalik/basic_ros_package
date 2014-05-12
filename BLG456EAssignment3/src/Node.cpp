@@ -18,6 +18,7 @@ public:
     double value() const            { return value_;	}
     
     void setVisited()               { visited_ = true;  }
+    void resetVisited()             { visited_ = false; }
     void setParent(Node* n)         { parent_ = n;      }
     void setValue(double v)         { value_ = v;       }
     
