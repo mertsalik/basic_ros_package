@@ -18,6 +18,10 @@
 #include <cstdlib>
 #include <cassert>
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
 #include "Node.cpp"
 #include "Box2DHelper.hpp"
 
@@ -53,6 +57,9 @@ RosWorld *ros_world;
 // RRT variables
 list<Node*> RRT_graph;
 bool isGraphBuilt = false;
+
+struct passwd *pw = getpwuid(getuid());
+const char *homedir = pw->pw_dir;
 
 ////////////////// 	END OF GLOBALS
 
@@ -109,8 +116,6 @@ Node* new_conf(Node* n, Node* r){
 void build_RRT_graph(double init_x, double init_y){
 	// This algorithm is derived from the pseudocode at the following link
 	// http://en.wikipedia.org/wiki/Rapidly_exploring_random_tree#Algorithm
-
-	srand((unsigned)time(NULL));	// seed for random
 
 	// initialize the graph with the initial coordinates of the robot
 	RRT_graph.push_back(new Node(init_x, init_y, 0));
@@ -208,11 +213,13 @@ void traverseRRT(){
     ros::Rate rate(10); //100 times a second; should be fast enough!
     robot_x=robot_y=std::numeric_limits<double>::infinity(); 
     
+	// iterate through waypoints in path list
     for(list<Node*>::iterator it = path.begin() ; it != path.end() ; ++it){
         waypoint_x = (*it)->x();
         waypoint_y = (*it)->y();
-
+		
         // 0.1m = 10cm - want to get this close 
+		// get the robot to each waypoint
         while (distance(waypoint_x, robot_x, waypoint_y, robot_y) > CLOSENESS_THRESH){ 
             
             if (!ros::ok()){
@@ -305,11 +312,28 @@ void print(){
 
 void exportGraph(){
 	ofstream file;
-	file.open("out.txt");
-
+	string dir = homedir;
+	dir += "/out.txt";
+	file.open(dir.c_str());
+	if(file.is_open()){
+		cout << "\nOUTPUT FILE CREATED!" << endl << endl;
+		file << RRT_graph.size() << endl;
+		for(list<Node*>::const_iterator it = RRT_graph.begin(); it != RRT_graph.end() ; ++it){
+			file << (*it)->id() << " " << (*it)->x() << " " << (*it)->y() << endl;
+			file << (*it)->adjs().size() << endl;
+			for(list<Node*>::const_iterator ite = (*it)->adjs().begin() ;
+											ite != (*it)->adjs().end() ; ++ite){
+				file << (*ite)->id() << " " << (*ite)->x() << " " << (*ite)->y() << endl;
+			}
+			file << endl;
+		}
 	
 
-	file.close();
+		file.close();
+	}
+	else{
+		cout << "\nERROR OPENING OUTPUT FILE" << endl << endl;
+	}
 	return;
 }
 
@@ -324,7 +348,6 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
             // as parameters, however the first callback somehow produces
             // incorrect x,y values, therefore we 'assume' the correct
             // coordinates as x:0,05 and y:0,001
-            srand((unsigned)time(NULL));
     
             build_RRT_graph(0.05, 0.001);
 			exportGraph();
@@ -379,7 +402,7 @@ void initBox2D(){
 
 int main(int argc, char **argv){
     
-    
+    srand((unsigned)time(NULL));
     ros::init(argc, argv, "searchAndDiscover");
     ros::NodeHandle n;
     initBox2D();
