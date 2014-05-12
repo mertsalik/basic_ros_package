@@ -313,13 +313,13 @@ void print(){
 void exportGraph(){
 	ofstream file;
 	string dir = homedir;
-	dir += "/out.txt";
+	dir += "/graph.txt";
 	file.open(dir.c_str());
 	if(file.is_open()){
-		cout << "\nOUTPUT FILE CREATED!" << endl << endl;
+		cout << "\nGRAPH OUTPUT FILE CREATED!" << endl << endl;
 		file << RRT_graph.size() << endl;
 		for(list<Node*>::const_iterator it = RRT_graph.begin(); it != RRT_graph.end() ; ++it){
-			file << (*it)->id() << " " << (*it)->x() << " " << (*it)->y() << endl;
+			file << (*it)->x() << " " << (*it)->y() << endl;
 			file << (*it)->adjs().size() << endl;
 			for(list<Node*>::const_iterator ite = (*it)->adjs().begin() ;
 											ite != (*it)->adjs().end() ; ++ite){
@@ -334,6 +334,20 @@ void exportGraph(){
 	else{
 		cout << "\nERROR OPENING OUTPUT FILE" << endl << endl;
 	}
+	
+	dir.clear();
+	dir = homedir;
+	dir += "/path.txt";
+	file.open(dir.c_str());
+	if(file.is_open()){
+		cout << "\nPATH OUTPUT FILE CREATED!" << endl << endl;
+		file << path.size() << endl;		
+		for(list<Node*>::const_iterator it = path.begin(); it != path.end() ; ++it)
+			file << (*it)->x() << " " << (*it)->y() << endl;
+		
+		file.close();
+	}
+
 	return;
 }
 
@@ -344,18 +358,18 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
     try{
 
         if(!isGraphBuilt){
+
+            isGraphBuilt = true;
             // originally, we were goint to push the robot x,y coordinates
             // as parameters, however the first callback somehow produces
             // incorrect x,y values, therefore we 'assume' the correct
             // coordinates as x:0,05 and y:0,001
     
             build_RRT_graph(0.05, 0.001);
-			exportGraph();
-            //print();
-            isGraphBuilt = true;
             initPath();
+			exportGraph();
             printPath();
-            traverseRRT();			
+            traverseRRT();	
         
         }
         
