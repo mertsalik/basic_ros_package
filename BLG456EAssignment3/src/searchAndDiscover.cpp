@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 #include <list>
 #include <vector>
@@ -28,9 +29,8 @@
 
 #define PI 3.141592653589793
 
-#define RRTe	// RRT \ PRM
+#define RRT	// RRT \ PRM
 #define RRT_VERTICE_COUNT 400
-#define DELTA_Q 100
 
 using namespace std;
 
@@ -40,22 +40,17 @@ ros::Publisher movement_publisher;			// velocity publisher
 boost::shared_ptr<tf::TransformListener> tf_listener_; //smart pointer would be better than naked
 tf::TransformListener* tf_listener = NULL;	// transform listener
 
+// path variables
 double waypoint_x = 0, waypoint_y = 0;
-//double goal_x = 2.75, goal_y = 3.8;
 double goal_x = -8.5, goal_y = 4;
 Node* goalNode = NULL;
 list<Node*> path;
-
 bool reached = false;
-bool obstacle = false;
 
-
-////// BOX2D VARIABLES
-
+// Box2D Variables
 RosWorld *ros_world;
 
-///// RRT VARIABLES
-
+// RRT variables
 list<Node*> RRT_graph;
 bool isGraphBuilt = false;
 
@@ -79,85 +74,81 @@ Node* nearestVertex(list<Node*>& g, Node*& n){
     
 }
 
-bool isColliding(Node* n1, Node* n2, Node* other){
-    cout << "Raycasting ";
+bool isColliding(Node* n1, Node* n2){
+
     if(ros_world!=NULL){
-      std::cout << "Ray casting ..." << std::endl;
+
       Point* p1 = new Point(n1->x(),n1->y());
       Point* p2 = new Point(n2->x(),n2->y());
-      cout << p1->toString() << " | " << p2->toString() << endl;
+
       Point intersection_point(0,0);
       bool result = ros_world->checkRayCast(p1,p2,intersection_point);
-      cout << "RAYCAST RESULT : " << result << endl;
-      // TODO: add intersection_point to node list
+
       return result;
-    }else{
-      ROS_ERROR("RosWorld is not initlialized!");
-      return false;
+    }
+	else{
+		ROS_ERROR("RosWorld is not initlialized!");
+		return false;
     }
 }
 
 Node* new_conf(Node* n, Node* r){
-    Node* collisionFree;
-    if(isColliding(n, r, collisionFree)){
-	Point* p1 = new Point(n->x(),n->y());
-	Point* p2 = new Point(r->x(),r->y());
-	Point* p3 = ros_world->getNonCollidingPoint(p1,p2);
-	collisionFree = new Node(p3->getX(),p3->getY(),9999);
-	cout << "New collision free point "<< endl;
-	cout << "From: " << p1->toString() << "  to: " << p3->toString() << endl; 
-        return collisionFree;
+	// if there is no collision, return the random node
+	// else, find the collision free point in the direction of vector(r - n)
+    if(isColliding(n, r)){
+		Point* p1 = new Point(n->x(),n->y());
+		Point* p2 = new Point(r->x(),r->y());
+
+		Point* p3 = ros_world->getNonCollidingPoint(p1,p2); 
+        return new Node(p3->getX(),p3->getY(),r->id());
     }
     else
         return r;
 }
 
 void build_RRT_graph(double init_x, double init_y){
-    cout << "build RRT graph" << endl;
-    srand((unsigned)time(NULL));
-    
-    // This algorithm is derived from the pseudocode at the following link
-    // http://en.wikipedia.org/wiki/Rapidly_exploring_random_tree#Algorithm
+	// This algorithm is derived from the pseudocode at the following link
+	// http://en.wikipedia.org/wiki/Rapidly_exploring_random_tree#Algorithm
 
-    // initialize the graph with the initial coordinates of the robot
-    RRT_graph.push_back(new Node(init_x, init_y, 0));
+	srand((unsigned)time(NULL));	// seed for random
 
-    // Randomly sample RRT_VERTICE_COUNT vertices (might not be collision-free)
-    // collision detection will be done later
-    for (unsigned i=1; i<=RRT_VERTICE_COUNT ; ++i){
+	// initialize the graph with the initial coordinates of the robot
+	RRT_graph.push_back(new Node(init_x, init_y, 0));
+
+	// Randomly sample RRT_VERTICE_COUNT vertices
+	for (unsigned i=1; i<=RRT_VERTICE_COUNT ; ++i){
+		
+		// get a random x, y
+		double x = ((double)(rand()%2000 - 1000))/100;
+		double y = ((double)(rand()%2000 - 1000))/100;
+		Node* randNode = new Node(x, y, i);
+
+		// make sure the randomly acquired node is collision free
+		Point* randPoint = new Point(randNode->x(),randNode->y());
+		while(!ros_world->pointAvailable(randPoint)){
+			double x = ((double)(rand()%2000 - 1000))/100;
+			double y = ((double)(rand()%2000 - 1000))/100;
+			randNode = new Node(x, y, i);
+			randPoint = new Point(randNode->x(),randNode->y());
+		}
         
-        // get a random x, y
-        double x = ((double)(rand()%2000 - 1000))/100;
-        double y = ((double)(rand()%2000 - 1000))/100;
-        Node* randNode = new Node(x, y, i);
-	Point* randPoint = new Point(randNode->x(),randNode->y());
-	while(!ros_world->pointAvailable(randPoint)){
-	  double x = ((double)(rand()%2000 - 1000))/100;
-	  double y = ((double)(rand()%2000 - 1000))/100;
-	  randNode = new Node(x, y, i);
-	  randPoint = new Point(randNode->x(),randNode->y());
+		// find the nearest node in the graph to the random node
+		Node* nearest = nearestVertex(RRT_graph, randNode);
+		
+		// check for collisions and find a suitable point that is 
+		// collision free for adding to the tree
+		Node* newNode = new_conf(nearest, randNode);
+		
+		// construct the edge between nodes
+		nearest->addAdj(newNode);
+		newNode->addAdj(nearest);
+		
+		// add the new node to the tree
+		RRT_graph.push_back(newNode);
+	
 	}
-        //cout << " Rand Node " << i << " (" << x << "," << y << ")" <<endl;
-        
-        // find the nearest node in the graph to the random node
-        Node* nearest = nearestVertex(RRT_graph, randNode);
-        //cout << " Nearest node in Tree: " << nearest->id() << endl;
-        
-        // check for collisions and find a suitable point that is 
-        // collision free for adding to the tree
-        Node* newNode = new_conf(nearest, randNode);
-        
-        // construct the edge between nodes
-        nearest->addAdj(newNode);
-        newNode->addAdj(nearest);
-        
-        // add the new node to the tree
-        RRT_graph.push_back(newNode);
-        
-        //cout << endl;
-    }
     
-    cout << "\n\n****RRT Graph(" << RRT_graph.size() <<") is Initialized****\n" << endl;
+    cout << "\n\n****RRT Graph with " << RRT_graph.size() <<" nodes is Initialized****\n" << endl;
 }
 
 void printPath(){
@@ -173,24 +164,20 @@ void printPath(){
 }
 
 void DFS(list<Node*> l, Node* n){
-    //cout << "DFS CALLED" << endl;
-    n->setVisited(); 
-    //cout << n->id() << " visited" << endl;
+    n->setVisited(); 	// mark current node as visited
+	
+	// for every adjacent node to the current node
     for(list<Node*>::const_iterator it = n->adjs().begin() ; it != n->adjs().end() ; ++it){
-        if((*it)->visited() == false){
-            (*it)->setParent(n);
-            //cout << "  " << (*it)->id() << " setting parent to " << n->id() << endl;
-            DFS(n->adjs(), (*it));
-        }
-        else{
-            ;//cout << "  " << (*it)->id() << " already visited" << endl;
+        if((*it)->visited() == false){	// if they are not visited
+            (*it)->setParent(n);		// set their parent to current node
+            DFS(n->adjs(), (*it));		// recursively iterate through them
         }
     }
 }
 
 void initPath(){
-    //cout << "PATH INITIALIZING" << endl;
-    // find the node in the tree closest to the destination coordinates
+
+    // find the closest node to the destination coordinates in the tree  
     double d = 1000000000;
     for(list<Node*>::const_iterator it = RRT_graph.begin() ; it != RRT_graph.end() ; ++it){
         if( distance((*it)->x(), goal_x, (*it)->y(), goal_y) < d ){
@@ -202,13 +189,14 @@ void initPath(){
     cout << "Goal node found: " << goalNode->id() << " X: " << goalNode->x()
                                                  <<  " Y: " << goalNode->y() << endl;
     
-    // Depth-First Search, set the parent of each node for building a path
+    // Depth-First Search, set the parent of each node for building a path afterwards
     DFS(RRT_graph, RRT_graph.front());
     
     // initialize path list
-    for(Node* n = goalNode ; n != RRT_graph.front() ; n = n->parent()){
+    for(Node* n = goalNode ; n != RRT_graph.front() ; n = n->parent())
         path.push_front(n);
-    }
+    
+	// lastly, push the initial node to the front of the path
     path.push_front(RRT_graph.front());
     
 }
@@ -220,10 +208,13 @@ void traverseRRT(){
     ros::Rate rate(10); //100 times a second; should be fast enough!
     robot_x=robot_y=std::numeric_limits<double>::infinity(); 
     
+	// iterate through waypoints in path list
     for(list<Node*>::iterator it = path.begin() ; it != path.end() ; ++it){
         waypoint_x = (*it)->x();
         waypoint_y = (*it)->y();
+		
         // 0.1m = 10cm - want to get this close 
+		// get the robot to each waypoint
         while (distance(waypoint_x, robot_x, waypoint_y, robot_y) > CLOSENESS_THRESH){ 
             
             if (!ros::ok()){
@@ -280,7 +271,6 @@ void traverseRRT(){
 
 
             movement_publisher.publish(cmd);
-            //reached = false;
         }
         cout << "\n\nWAYPOINT REACHED!!\t" 
                "ID: " << (*it)->id() << " X: " << (*it)->x() 
@@ -289,6 +279,7 @@ void traverseRRT(){
     
     reached = true;
     
+	// make robot stop once the goal is reached
     geometry_msgs::Twist stop;
     stop.linear.x=0;
     stop.angular.z=0;
@@ -314,6 +305,16 @@ void print(){
     cout << endl << endl;
 }
 
+void exportGraph(){
+	ofstream file;
+	file.open("out.txt");
+
+	
+
+	file.close();
+	return;
+}
+
 void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 
     // print robot transform
@@ -328,11 +329,12 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
             srand((unsigned)time(NULL));
     
             build_RRT_graph(0.05, 0.001);
+			exportGraph();
             //print();
             isGraphBuilt = true;
             initPath();
             printPath();
-            traverseRRT();
+            traverseRRT();			
         
         }
         
@@ -360,7 +362,8 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
             cout << "GOAL REACHED! " << endl;
             cout << "Goal Node: ID: " << goalNode->id() << " X: " << goalNode->x() 
                                                         << " Y: " << goalNode->y() << endl;            
-        }
+			printPath();	        
+		}
         
         
         
