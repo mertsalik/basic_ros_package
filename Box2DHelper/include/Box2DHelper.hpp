@@ -130,6 +130,7 @@ private:
     b2BodyDef myBodyDef;
     b2FixtureDef myFixtureDef;
 
+    // [Obsolete]
     bool checkRayCast(b2Vec2 p1, b2Vec2 p2, b2Vec2 &output);
     
     b2Body* createObject(Point* bl,Point* br, Point* tl, Point* tr, Point* center);

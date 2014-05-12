@@ -42,7 +42,7 @@ tf::TransformListener* tf_listener = NULL;	// transform listener
 
 double waypoint_x = 0, waypoint_y = 0;
 //double goal_x = 2.75, goal_y = 3.8;
-double goal_x = 8.5, goal_y = 8.5;
+double goal_x = -8.5, goal_y = 4;
 Node* goalNode = NULL;
 list<Node*> path;
 

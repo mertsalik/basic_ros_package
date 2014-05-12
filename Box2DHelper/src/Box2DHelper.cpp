@@ -47,43 +47,36 @@ bool RosWorld::pointAvailable(Point* p){
     };
 
 bool RosWorld::checkRayCast(Point* p1, Point* p2, Point &output){
-        b2Vec2 p1_(p1->getX(),p1->getY());
-        b2Vec2 p2_(p2->getX(),p2->getY());
-        b2Vec2 output_;
-        bool result = checkRayCast(p1_,p2_,output_);
-        output.setX(output_.x);
-        output.setY(output_.y);
-        return result;
+        Point* temp;
+        double x_diff = p2->getX() - p1->getX();
+        double y_diff = p2->getY() - p1->getY();
+        
+        for(int i=10;i>0;i--){
+            temp = new Point((x_diff * 0.10 * i) + p1->getX() , (y_diff * 0.10 * i) + p1->getY());
+            //std::cout << i <<") "  << "Checking : " << temp->toString() << std::endl;
+            bool available = pointAvailable(temp);
+            if(!available){
+                //std::cout << "COLLISION DETECTED" << std::endl;
+                return true;
+            }
+        }
+        
+        return false;
     };
    
 Point* RosWorld::getNonCollidingPoint(Point* p1, Point* p2){
         Point output(0,0);
         bool result;
         Point* temp;
-        double x_diff = p1->getX() - p2->getX();
-        double y_diff = p1->getY() - p2->getY();
+        double x_diff = p2->getX() - p1->getX();
+        double y_diff = p2->getY() - p1->getY();
         
-        // 3/4
-        temp = new Point( (x_diff * 0.75) + p1->getX() , (y_diff * 0.75) + p1->getY());
-        result = checkRayCast(p1,temp,output);
-        if(!result){
-            return temp;
+        for(int i=9;i>=0;i--){
+            temp = new Point( (x_diff * 0.10 * i) + p1->getX() , (y_diff * 0.10 * i) + p1->getY());
+            result = checkRayCast(p1,temp,output);
+            if(!result)
+                return temp;
         }
-        
-        // 2/4
-        temp = new Point( (x_diff * 0.5) + p1->getX() , (y_diff * 0.5) + p1->getY());
-        result = checkRayCast(p1,temp,output);
-        if(!result){
-            return temp;
-        }
-        
-        // 1/4
-        temp = new Point( (x_diff * 0.25) + p1->getX() , (y_diff * 0.25) + p1->getY());
-        result = checkRayCast(p1,temp,output);
-        if(!result){
-            return temp;
-        }
-        
         return temp;
     };
     
@@ -129,6 +122,7 @@ b2Body* RosWorld::createObject(Point* bl,Point* br, Point* tl, Point* tr, Point*
         
     };
     
+// [Obsolete]
 bool RosWorld::checkRayCast(b2Vec2 p1, b2Vec2 p2, b2Vec2 &output){
         
         int32 childIndex = 0;
