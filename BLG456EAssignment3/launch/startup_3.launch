@@ -23,11 +23,15 @@
   <node name="left_wall" pkg="gazebo" type="spawn_model" args="-urdf -param simple_y_wall -x -10.0 -y 0 -z 0  -R 0 -P 0 -Y 0 -model wall3" respawn="false" output="screen" />
   <node name="right_wall" pkg="gazebo" type="spawn_model" args="-urdf -param simple_y_wall -x 10.0 -y 0 -z 0  -R 0 -P 0 -Y 0 -model wall4" respawn="false" output="screen" />
   
-  <node name="block1" pkg="gazebo" type="spawn_model" args="-urdf -param vertical_block -x 4.0 -y 2 -z 0  -R 0 -P 0 -Y 0 -model block1" respawn="false" output="screen" />
-  <node name="block2" pkg="gazebo" type="spawn_model" args="-urdf -param vertical_block -x 0.0 -y -5.0 -z 0  -R 0 -P 0 -Y 0 -model block2" respawn="false" output="screen" />
-  <node name="block3" pkg="gazebo" type="spawn_model" args="-urdf -param horizontal_block -x -3.0 -y 0.0 -z 0  -R 0 -P 0 -Y 0 -model block3" respawn="false" output="screen" />
-  <node name="block4" pkg="gazebo" type="spawn_model" args="-urdf -param horizontal_block -x -7.0 -y 5.0 -z 0  -R 0 -P 0 -Y 0 -model block4" respawn="false" output="screen" />
-  
+  <node name="block1" pkg="gazebo" type="spawn_model" args="-urdf -param horizontal_block -x -5.0 -y 6.0 -z 0  -R 0 -P 0 -Y 0 -model block1" respawn="false" output="screen" />
+  <node name="block2" pkg="gazebo" type="spawn_model" args="-urdf -param horizontal_block -x 5.0 -y 6.0 -z 0  -R 0 -P 0 -Y 0 -model block2" respawn="false" output="screen" />
+  <node name="block3" pkg="gazebo" type="spawn_model" args="-urdf -param vertical_block -x -2 -y 3 -z 0  -R 0 -P 0 -Y 0 -model block3" respawn="false" output="screen" />
+  <node name="block4" pkg="gazebo" type="spawn_model" args="-urdf -param vertical_block -x 2 -y 3 -z 0  -R 0 -P 0 -Y 0 -model block4" respawn="false" output="screen" />
+  <node name="block5" pkg="gazebo" type="spawn_model" args="-urdf -param horizontal_block -x -5.0 -y 0.0 -z 0  -R 0 -P 0 -Y 0 -model block5" respawn="false" output="screen" />
+  <node name="block6" pkg="gazebo" type="spawn_model" args="-urdf -param horizontal_block -x 5.0 -y 0.0 -z 0  -R 0 -P 0 -Y 0 -model block6" respawn="false" output="screen" />
+  <node name="block7" pkg="gazebo" type="spawn_model" args="-urdf -param vertical_block -x -5 -y -3 -z 0  -R 0 -P 0 -Y 0 -model block7" respawn="false" output="screen" />
+  <node name="block8" pkg="gazebo" type="spawn_model" args="-urdf -param horizontal_block -x 0.5 -y -4.0 -z 0  -R 0 -P 0 -Y 0 -model block8" respawn="false" output="screen" />
+  <node name="block9" pkg="gazebo" type="spawn_model" args="-urdf -param vertical_block -x 3.5 -y -6.5 -z 0  -R 0 -P 0 -Y 0 -model block9" respawn="false" output="screen" />
 
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
         <remap from="scan" to="base_scan/scan" />
