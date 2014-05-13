@@ -34,12 +34,12 @@
 
 #define PI 3.141592653589793
 
-#define PRM	// RRT \ PRM
+#define RRT	// RRT \ PRM
 #define VERTICE_COUNT 600
 #define PRM_NEIGHBOR_COUNT 10
 #define MAX_VALUE 100000
 
-#define MAP_TYPE 1
+#define MAP_TYPE 2
 
 using namespace std;
 
@@ -51,7 +51,8 @@ tf::TransformListener* tf_listener = NULL;	// transform listener
 
 // path variables
 double waypoint_x = 0, waypoint_y = 0;
-double goal_x = -8.5, goal_y = 4;
+//double goal_x = -8.5, goal_y = 4;
+double goal_x = 4.0, goal_y = -6.0;
 Node* goalNode = NULL;
 list<Node*> path;
 bool reached = false;

@@ -32,6 +32,18 @@ RosWorld::RosWorld(int map_type){
 	    case 3:
 		break;
 	    case 2:
+		obstacles.push_back(new Point(-3,0));
+		directions.push_back(false);
+		obstacles.push_back(new Point(3,0));
+		directions.push_back(false);
+		obstacles.push_back(new Point(-3,-7));
+		directions.push_back(true);
+		obstacles.push_back(new Point(3,7));
+		directions.push_back(true);
+		obstacles.push_back(new Point(6,-6));
+		directions.push_back(false);
+		obstacles.push_back(new Point(-6,6));
+		directions.push_back(false);
 		break;
 	    case 1:
 	    default:

@@ -5,8 +5,9 @@ hor_block_widht = 5*20
 hor_block_height = 1*20
 ver_block_widht = 1*20
 ver_block_height = 5*20
-
+# tupple def -> hor x y
 map1_obstacles = [(1,4,2),(1,0,-5),(0,-3,0),(0,-7,5)]
+map2_obstacles = [(0,-3,0),(0,3,0),(1,-3,-7),(1,3,7),(0,6,-6),(0,-6,6)]
 
 def readGraph(t,file_name):
 	f = open(file_name, 'r')
@@ -162,6 +163,11 @@ def main():
 	#Select Map
 	if map_id == 1:
 		obstacle_map = map1_obstacles
+	elif map_id == 2:
+		obstacle_map = map2_obstacles
+	else:
+		print("Map3 not implemented!")
+		exit()
 
 	# Create screen and turtle.
 	turtle.setup(600,600)
