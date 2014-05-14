@@ -19,10 +19,30 @@ samples
 
 RRT Visualization
 
+RRT on Map1:
+
 https://www.youtube.com/watch?v=YpSJZxxPHo8
+
+RRT on Map2:
+
+https://www.youtube.com/watch?v=RiKGyypCG1w
+
+RRT on Map3:
+
+https://www.youtube.com/watch?v=NSB_6mL1ddQ
 
 
 PRM Visualization
 
+PRM on Map1:
+
 http://www.youtube.com/watch?v=E3dzhqH_RZc
+
+PRM on Map2:
+
+https://www.youtube.com/watch?v=wH3PbmoLVGc
+
+PRM on Map3:
+
+https://www.youtube.com/watch?v=iMv1ZEBKFtQ
 
